@@ -156,36 +156,6 @@ const userSchema = z.object({
     }
 }
 
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes float {
-    0%, 100% {
-        transform: translateY(0px);
-    }
-    50% {
-        transform: translateY(-10px);
-    }
-}
-
-@keyframes pulse-glow {
-    0%, 100% {
-        filter: drop-shadow(0 0 15px rgba(56, 189, 248, 0.3));
-    }
-    50% {
-        filter: drop-shadow(0 0 30px rgba(56, 189, 248, 0.6));
-    }
-}
-
-
 .container {
     width: 100%;
     max-width: min(1200px, 92vw);
@@ -210,6 +180,13 @@ const userSchema = z.object({
     max-width: 100%;
     margin-bottom: 1.5rem;
     animation: float 4s ease-in-out infinite, pulse-glow 3s infinite;
+    /* Adição: Suavidade para o hover */
+    transition: transform 0.3s ease;
+}
+
+/* Adição: Efeito na logo */
+.main-logo:hover {
+    transform: scale(1.05);
 }
 
 .hero h1 {
@@ -244,6 +221,19 @@ const userSchema = z.object({
     max-width: 100%;
     word-break: break-word;
     text-align: center;
+    /* Adição: Feedback visual de clique e hover */
+    transition: all 0.2s ease;
+}
+
+/* Adição: Efeito hover no botão NPM */
+.npm-install:hover {
+    border-color: #38bdf8;
+    background: #243046;
+    transform: translateY(-2px);
+}
+
+.npm-install:active {
+    transform: translateY(0);
 }
 
 .npm-install code {
@@ -273,6 +263,16 @@ const userSchema = z.object({
     border: 1px solid #334155;
     display: flex;
     flex-direction: column;
+    /* Adição: Suavidade para interações */
+    transition: all 0.3s ease;
+}
+
+/* Adição: Efeito hover nos cards */
+.card:hover {
+    border-color: #334155;
+    background: #243046;
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
 .card h3 {
@@ -321,6 +321,13 @@ const userSchema = z.object({
     padding: clamp(1.2rem, 4vw, 1.5rem);
     border-radius: 16px;
     border: 1px solid #1e293b;
+    /* Adição */
+    transition: border-color 0.3s ease;
+}
+
+/* Adição: Highlight na seção de código ao passar o mouse */
+.how-it-works:hover {
+    border-color: #334155;
 }
 
 pre {
@@ -329,6 +336,13 @@ pre {
     border-radius: 8px;
     overflow-x: auto;
     border: 1px solid #30363d;
+    /* Adição */
+    transition: border-color 0.3s ease;
+}
+
+/* Adição: Borda brilha quando o container pai recebe hover */
+.how-it-works:hover pre {
+    border-color: #38bdf8;
 }
 
 .code_center {
@@ -352,6 +366,11 @@ pre {
 
     .hero h1 {
         font-size: clamp(1.9rem, 9vw, 2.3rem);
+    }
+    
+    /* Adição: Desabilita ou reduz movimentos no mobile para melhor performance */
+    .card:hover {
+        transform: translateY(-2px);
     }
 }
 </style>

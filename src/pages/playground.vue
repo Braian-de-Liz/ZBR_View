@@ -8,7 +8,6 @@ const tipo = ref('cpf')
 const resultado = computed(() => {
   if (!documento.value) return null
   
-  // Mapeamento dinâmico dos validadores
   const validators: Record<string, any> = {
     cpf: zbr.cpf(),
     cnpj: zbr.cnpj(),
@@ -30,7 +29,7 @@ const limpar = () => documento.value = ''
       </header>
 
       <div class="controls">
-        <div class="input-group">
+        <div class="input-group select-box">
           <label>Tipo de Documento</label>
           <select v-model="tipo" @change="limpar">
             <option value="cpf">CPF (Pessoa Física)</option>
@@ -39,7 +38,7 @@ const limpar = () => documento.value = ''
           </select>
         </div>
 
-        <div class="input-group">
+        <div class="input-group input-box">
           <label>Número do {{ tipo.toUpperCase() }}</label>
           <input 
             v-model="documento" 
@@ -82,34 +81,55 @@ const limpar = () => documento.value = ''
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 2rem;
+  /* Padding responsivo: menos nas laterais em telas pequenas */
+  padding: clamp(1rem, 5vw, 2rem);
   background: #0f172a; 
+  box-sizing: border-box;
 }
 
 .glass-card {
   background: #1e293b;
   border: 1px solid #334155;
-  padding: 3rem;
+  /* Padding interno reduzido para mobile */
+  padding: clamp(1.5rem, 5vw, 3rem);
   border-radius: 24px;
   width: 100%;
-  max-width: 1200px;
+  max-width: 800px; /* Reduzi de 1200px para ficar mais elegante e centralizado */
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
 }
 
 .card-header {
   text-align: center;
-  margin-bottom: 2.5rem;
+  margin-bottom: 2rem;
 }
 
-h1 { color: #f8fafc; margin-bottom: 0.5rem; font-size: 1.8rem; }
-.desc { color: #94a3b8; font-size: 1rem; }
+h1 { 
+  color: #f8fafc; 
+  margin-bottom: 0.5rem; 
+  font-size: clamp(1.4rem, 5vw, 1.8rem); 
+}
 
-.controls { display: flex; flex-direction: column; gap: 1.5rem; }
-.input-group { display: flex; flex-direction: column; gap: 0.6rem; }
+.desc { 
+  color: #94a3b8; 
+  font-size: clamp(0.9rem, 3vw, 1rem); 
+}
+
+/* Layout dos controles: lado a lado no desktop, empilhado no mobile */
+.controls { 
+  display: grid;
+  grid-template-columns: 1fr 2fr; /* O input ganha mais espaço que o select */
+  gap: 1.5rem; 
+}
+
+.input-group { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 0.6rem; 
+}
 
 label { 
   color: #38bdf8; 
-  font-size: 0.75rem; 
+  font-size: 0.7rem; 
   font-weight: 700; 
   text-transform: uppercase; 
   letter-spacing: 0.05em;
@@ -118,11 +138,13 @@ label {
 select, input {
   background: #0f172a;
   border: 1px solid #334155;
-  padding: 1rem;
+  padding: 0.8rem 1rem;
   border-radius: 12px;
   color: white;
   font-size: 1rem;
   transition: all 0.2s ease;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 select:focus, input:focus {
@@ -131,21 +153,26 @@ select:focus, input:focus {
   box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.15);
 }
 
-.result-area { margin-top: 2.5rem; height: 100px; }
+.result-area { 
+  margin-top: 2rem; 
+  min-height: 80px; /* Reduzi um pouco para não sobrar tanto espaço vazio */
+}
 
 .waiting { 
   color: #475569; 
   text-align: center; 
-  border: 2px dashed #1e293b; 
+  border: 2px dashed #334155; 
   padding: 1.5rem; 
   border-radius: 12px;
   font-style: italic;
+  font-size: 0.9rem;
 }
 
 .status-box {
   display: flex;
+  align-items: center;
   gap: 1rem;
-  padding: 1.25rem;
+  padding: 1rem 1.25rem;
   border-radius: 16px;
 }
 
@@ -162,10 +189,27 @@ select:focus, input:focus {
 }
 
 .msg { display: flex; flex-direction: column; }
-.msg strong { font-size: 1rem; }
-.msg span { font-size: 0.85rem; opacity: 0.8; }
+.msg strong { font-size: 0.95rem; }
+.msg span { font-size: 0.8rem; opacity: 0.8; }
 
-/* Transições suaves entre estados */
+/* MEDIA QUERIES PARA CELULAR */
+@media (max-width: 650px) {
+  .controls {
+    grid-template-columns: 1fr; /* Empilha os campos */
+    gap: 1rem;
+  }
+  
+  .playground-page {
+    padding-top: 5rem; /* Espaço para a nav fixa no mobile */
+    align-items: flex-start; /* No mobile, melhor começar do topo */
+  }
+
+  .glass-card {
+    padding: 1.5rem 1.25rem;
+  }
+}
+
+/* Transições */
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 </style>
