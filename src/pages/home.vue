@@ -1,5 +1,20 @@
 <script setup lang="ts">
-// A Nav agora é gerenciada apenas pelo App.vue
+import { ref } from 'vue';
+const copied = ref(false);
+
+const copyToClipboard = async () => {
+    const text = 'npm install br_standards_with_zod'
+    try {
+        await navigator.clipboard.writeText(text)
+        copied.value = true
+
+        setTimeout(() => {
+            copied.value = false
+        }, 2000)
+    } catch (err) {
+        console.error('Falha ao copiar:', err)
+    }
+}
 </script>
 
 <template>
@@ -11,8 +26,13 @@
             <h1>ZBR Standards</h1>
             <p class="subtitle">A ponte perfeita entre o <strong>Zod</strong> e os padrões brasileiros.</p>
 
-            <div class="npm-install">
+            <div class="npm-install" @click="copyToClipboard" title="Clique para copiar"
+                style="cursor: pointer; position: relative;">
                 <code>npm install br_standards_with_zod</code>
+
+                <span class="copy-status">
+                    {{ copied ? ' Copiado!' : '📋' }}
+                </span>
             </div>
         </header>
 
@@ -99,144 +119,239 @@ const userSchema = z.object({
 </template>
 
 <style scoped>
-/* Keyframes e Animações */
+
 @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(30px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
+
+    0%,
+    100% {
+        transform: translateY(0px);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
 }
 
 @keyframes pulse-glow {
-    0%, 100% { filter: drop-shadow(0 0 15px rgba(56, 189, 248, 0.3)); }
-    50% { filter: drop-shadow(0 0 30px rgba(56, 189, 248, 0.6)); }
+
+    0%,
+    100% {
+        filter: drop-shadow(0 0 15px rgba(56, 189, 248, 0.3));
+    }
+
+    50% {
+        filter: drop-shadow(0 0 30px rgba(56, 189, 248, 0.6));
+    }
 }
 
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+@keyframes pulse-glow {
+    0%, 100% {
+        filter: drop-shadow(0 0 15px rgba(56, 189, 248, 0.3));
+    }
+    50% {
+        filter: drop-shadow(0 0 30px rgba(56, 189, 248, 0.6));
+    }
+}
+
+
 .container {
-    max-width: 900px;
+    width: 100%;
+    max-width: min(1200px, 92vw);
     margin: 0 auto;
-    padding: 8rem 2rem 4rem 2rem;
+    padding: clamp(4rem, 6vw, 6rem)
+             clamp(1rem, 4vw, 2rem)
+             2rem;
     color: #f8fafc;
+    box-sizing: border-box;
     animation: fadeInUp 0.8s ease-out;
 }
 
-.hero { text-align: center; padding-bottom: 4rem; }
+
+.hero {
+    text-align: center;
+    padding: 0 clamp(0.5rem, 3vw, 1rem)
+             clamp(2rem, 6vw, 3rem);
+}
 
 .main-logo {
-    height: 120px;
+    height: clamp(64px, 18vw, 96px);
+    max-width: 100%;
     margin-bottom: 1.5rem;
     animation: float 4s ease-in-out infinite, pulse-glow 3s infinite;
 }
 
 .hero h1 {
-    font-size: 3.5rem;
-    margin-bottom: 0.5rem;
+    font-size: clamp(2rem, 10vw, 3.5rem);
+    margin-bottom: 1rem;
     background: linear-gradient(to right, #22c55e, #3b82f6);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     font-weight: 800;
+    line-height: 1.1;
 }
 
-.subtitle { font-size: 1.25rem; color: #94a3b8; }
+.subtitle {
+    font-size: clamp(1rem, 3vw, 1.1rem);
+    line-height: 1.5;
+    color: #94a3b8;
+}
+
 
 .npm-install {
     background: #1e293b;
-    padding: 0.8rem 1.5rem;
-    border-radius: 99px;
-    display: inline-block;
-    margin-top: 2rem;
+    padding: 0.9rem 1.2rem;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 2rem auto 0;
     border: 1px solid #334155;
     font-family: monospace;
     color: #38bdf8;
+    font-size: clamp(0.75rem, 2.5vw, 0.85rem);
+    max-width: 100%;
+    word-break: break-word;
+    text-align: center;
+}
+
+.npm-install code {
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.copy-status {
+    font-size: 1rem;
+}
+
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(
+        auto-fit,
+        minmax(min(280px, 100%), 1fr)
+    );
+    gap: clamp(1rem, 3vw, 1.5rem);
+    margin-top: 2rem;
+}
+
+.card {
+    background: #1e293b;
+    padding: clamp(1.2rem, 4vw, 1.5rem);
+    border-radius: 16px;
+    border: 1px solid #334155;
+    display: flex;
+    flex-direction: column;
+}
+
+.card h3 {
+    color: #38bdf8;
+    margin-bottom: 1rem;
+    font-size: 1.3rem;
+}
+
+.card ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    text-align: left;
+}
+
+.card li {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 0.75rem;
+    color: #cbd5e1;
+    font-size: 0.95rem;
+}
+
+
+.code-showcase {
+    margin-top: 3rem;
 }
 
 .section-title {
     text-align: center;
-    margin-top: 6rem;
-    margin-bottom: 3rem;
+    margin-bottom: 2rem;
 }
 
 .section-title h2 {
-    font-size: 2.2rem;
-    color: #f8fafc;
+    font-size: clamp(1.6rem, 5vw, 2.2rem);
 }
 
 .section-title p {
     color: #94a3b8;
 }
 
-.grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
-}
-
-.card {
-    background: #1e293b;
-    padding: 2rem;
-    border-radius: 12px;
-    border: 1px solid #334155;
-    transition: all 0.3s ease;
-}
-
-.card:hover {
-    transform: translateY(-5px);
-    border-color: #38bdf8;
-    background: #243147;
-}
-
-.card h3 { color: #38bdf8; margin-bottom: 1rem; }
-.card ul { list-style: none; padding: 0; }
-.card li { margin-bottom: 0.5rem; color: #cbd5e1; }
-
 .how-it-works {
-    margin-bottom: 2rem;
+    margin: 2rem 0;
     background: #111827;
-    padding: 2rem;
+    padding: clamp(1.2rem, 4vw, 1.5rem);
     border-radius: 16px;
     border: 1px solid #1e293b;
 }
 
-.how-it-works h3 {
-    color: #22c55e;
-    margin-bottom: 0.5rem;
-}
-
-.how-it-works p {
-    color: #94a3b8;
-    margin-bottom: 1rem;
-    font-size: 0.95rem;
-}
-
 pre {
     background: #010409;
-    padding: 1.5rem;
+    padding: clamp(0.75rem, 3vw, 1rem);
     border-radius: 8px;
     overflow-x: auto;
     border: 1px solid #30363d;
 }
 
 .code_center {
-    color: #e6edf3;
-    font-family: 'Fira Code', monospace;
-    font-size: 0.9rem;
-    line-height: 1.5;
+    font-size: clamp(0.75rem, 2.5vw, 0.85rem);
+    line-height: 1.6;
 }
+
 
 .footer-simple {
     text-align: center;
-    margin-top: 8rem;
-    padding: 2rem 0;
-    border-top: 1px solid #1e293b;
+    margin-top: 4rem;
     color: #64748b;
     font-size: 0.9rem;
 }
 
-@media (max-width: 768px) {
-    .grid { grid-template-columns: 1fr; }
-    h1 { font-size: 2.5rem; }
+
+@media (max-width: 600px) {
+    .container {
+        padding-top: 4.5rem;
+    }
+
+    .hero h1 {
+        font-size: clamp(1.9rem, 9vw, 2.3rem);
+    }
 }
 </style>
