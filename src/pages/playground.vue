@@ -11,7 +11,9 @@ const resultado = computed(() => {
   const validators: Record<string, any> = {
     cpf: zbr.cpf(),
     cnpj: zbr.cnpj(),
-    rg: zbr.rg() 
+    rg: zbr.rg(),
+    cep: zbr.cep(),
+    telefone: zbr.tel()
   }
 
   return validators[tipo.value]?.safeParse(documento.value)
@@ -25,7 +27,7 @@ const limpar = () => documento.value = ''
     <div class="glass-card">
       <header class="card-header">
         <h1>Playground Interativo</h1>
-        <p class="desc">Validação em tempo real com algoritmos oficiais.</p>
+        <p class="desc">Validação em tempo real com algoritmos oficiais da v1.1.0.</p>
       </header>
 
       <div class="controls">
@@ -34,15 +36,23 @@ const limpar = () => documento.value = ''
           <select v-model="tipo" @change="limpar">
             <option value="cpf">CPF (Pessoa Física)</option>
             <option value="cnpj">CNPJ (Empresa)</option>
-            <option value="rg">RG (Registro Geral - SP)</option>
+            <option value="rg">RG (Registro Geral)</option>
+            <option value="cep">CEP (Postal)</option>
+            <option value="telefone">Telefone (Fixo/Celular)</option>
           </select>
         </div>
 
         <div class="input-group input-box">
-          <label>Número do {{ tipo.toUpperCase() }}</label>
+          <label>Entrada do {{ tipo.toUpperCase() }}</label>
           <input 
             v-model="documento" 
-            :placeholder="`Ex: ${tipo === 'cpf' ? '000.000.000-00' : '00.000.000/0001-00'}`"
+            :placeholder="
+              tipo === 'cpf' ? 'Ex: 000.000.000-00' : 
+              tipo === 'cnpj' ? 'Ex: 00.000.000/0001-00' : 
+              tipo === 'cep' ? 'Ex: 00000-000' :
+              tipo === 'telefone' ? 'Ex: (47) 99999-8888' :
+              'Digite para validar...'
+            "
             autofocus
           />
         </div>
@@ -58,7 +68,7 @@ const limpar = () => documento.value = ''
             <span class="icon">✅</span>
             <div class="msg">
               <strong>Válido!</strong>
-              <span>O {{ tipo.toUpperCase() }} informado está correto.</span>
+              <span>O {{ tipo.toUpperCase() }} informado está correto e higienizado: <strong>{{ resultado.data }}</strong></span>
             </div>
           </div>
 
@@ -81,7 +91,6 @@ const limpar = () => documento.value = ''
   display: flex;
   justify-content: center;
   align-items: center;
-  /* Padding responsivo: menos nas laterais em telas pequenas */
   padding: clamp(1rem, 5vw, 2rem);
   background: #0f172a; 
   box-sizing: border-box;
@@ -90,11 +99,10 @@ const limpar = () => documento.value = ''
 .glass-card {
   background: #1e293b;
   border: 1px solid #334155;
-  /* Padding interno reduzido para mobile */
   padding: clamp(1.5rem, 5vw, 3rem);
   border-radius: 24px;
   width: 100%;
-  max-width: 800px; /* Reduzi de 1200px para ficar mais elegante e centralizado */
+  max-width: 800px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
 }
 
@@ -114,10 +122,9 @@ h1 {
   font-size: clamp(0.9rem, 3vw, 1rem); 
 }
 
-/* Layout dos controles: lado a lado no desktop, empilhado no mobile */
 .controls { 
   display: grid;
-  grid-template-columns: 1fr 2fr; /* O input ganha mais espaço que o select */
+  grid-template-columns: 1fr 2fr;
   gap: 1.5rem; 
 }
 
@@ -155,7 +162,7 @@ select:focus, input:focus {
 
 .result-area { 
   margin-top: 2rem; 
-  min-height: 80px; /* Reduzi um pouco para não sobrar tanto espaço vazio */
+  min-height: 80px;
 }
 
 .waiting { 
@@ -192,16 +199,15 @@ select:focus, input:focus {
 .msg strong { font-size: 0.95rem; }
 .msg span { font-size: 0.8rem; opacity: 0.8; }
 
-/* MEDIA QUERIES PARA CELULAR */
 @media (max-width: 650px) {
   .controls {
-    grid-template-columns: 1fr; /* Empilha os campos */
+    grid-template-columns: 1fr;
     gap: 1rem;
   }
   
   .playground-page {
-    padding-top: 5rem; /* Espaço para a nav fixa no mobile */
-    align-items: flex-start; /* No mobile, melhor começar do topo */
+    padding-top: 5rem;
+    align-items: flex-start;
   }
 
   .glass-card {
@@ -209,7 +215,6 @@ select:focus, input:focus {
   }
 }
 
-/* Transições */
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 </style>

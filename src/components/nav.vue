@@ -33,6 +33,9 @@ const closeMenu = () => {
                 </div>
                 
                 <router-link to="/" class="nav-item btn-playground">Início</router-link>
+                
+                <router-link to="/integracao" class="nav-item btn-playground">Integrações</router-link>
+
                 <router-link to="/playground" class="nav-item btn-playground">
                     <img src="../assets/imgs/playground.png" alt="" class="icon-sm" />
                     <span>Playground</span>
@@ -49,6 +52,7 @@ const closeMenu = () => {
         <transition name="fade-slide">
             <div v-if="isMenuOpen" class="mobile-menu">
                 <router-link to="/" class="mobile-item" @click="closeMenu">Início</router-link>
+                <router-link to="/integracoes" class="mobile-item" @click="closeMenu">Integrações</router-link>
                 <router-link to="/playground" class="mobile-item" @click="closeMenu">Playground</router-link>
                 
                 <div class="mobile-footer">
@@ -131,12 +135,17 @@ const closeMenu = () => {
     text-decoration: none;
     color: #94a3b8;
     font-size: 0.95rem;
-    transition: color 0.2s;
+    transition: all 0.2s;
 }
 
 .nav-item:hover { color: white; }
 
-/* BOTÃO PLAYGROUND (O que estava gigante) */
+/* Classe ativa do Router */
+.router-link-active:not(.brand) {
+    color: #38bdf8;
+}
+
+/* BOTÃO PLAYGROUND */
 .btn-playground {
     display: flex;
     align-items: center;
@@ -146,6 +155,11 @@ const closeMenu = () => {
     border-radius: 8px;
     border: 1px solid #334155;
     color: white !important;
+}
+
+.btn-playground:hover {
+    background: #2d3a4f;
+    border-color: #38bdf8;
 }
 
 .icon-sm {
@@ -174,7 +188,6 @@ const closeMenu = () => {
     transition: 0.3s;
 }
 
-/* Animação X */
 .hamburger.is-active span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
 .hamburger.is-active span:nth-child(2) { opacity: 0; }
 .hamburger.is-active span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
@@ -201,17 +214,19 @@ const closeMenu = () => {
     font-weight: 700;
 }
 
+.mobile-item.router-link-active {
+    color: #38bdf8;
+}
+
 .mobile-footer {
     display: flex;
     gap: 2rem;
     margin-top: 2rem;
 }
 
-/* TRANSIÇÃO */
 .fade-slide-enter-active, .fade-slide-leave-active { transition: all 0.3s ease; }
 .fade-slide-enter-from, .fade-slide-leave-to { opacity: 0; transform: translateY(-20px); }
 
-/* RESPONSIVIDADE */
 @media (max-width: 850px) {
     .desktop-only { display: none; }
     .hamburger { display: flex; }
