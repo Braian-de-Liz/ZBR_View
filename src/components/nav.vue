@@ -34,7 +34,7 @@ const closeMenu = () => {
                 
                 <router-link to="/" class="nav-item btn-playground">Início</router-link>
                 
-                <router-link to="/integracao" class="nav-item btn-playground">Integrações</router-link>
+                <router-link to="/integracoes" class="nav-item btn-playground">Integrações</router-link>
 
                 <router-link to="/playground" class="nav-item btn-playground">
                     <img src="../assets/imgs/playground.png" alt="" class="icon-sm" />
