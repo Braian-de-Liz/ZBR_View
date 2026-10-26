@@ -1,15 +1,316 @@
-/* Adicione isso no seu arquivo CSS global (style.css) */
-html, body {
+/* ==========================================================================
+   ZBR Standards — Design tokens & base
+   ========================================================================== */
+
+:root {
+  /* Superfícies — preto neutro, levemente quente */
+  --bg: #0c0c0d;
+  --bg-soft: #101011;
+  --surface: #141415;
+  --surface-2: #1a1a1c;
+  --surface-3: #212124;
+  --border: #252527;
+  --border-strong: #38383b;
+
+  /* Texto */
+  --text: #ece9e4;
+  --text-muted: #9c9993;
+  --text-faint: #7d7a75;
+
+  /* Acento — o amarelo do logo, dessaturado */
+  --accent: #e3c24a;
+  --accent-strong: #f0d065;
+  --accent-ink: #17140a;
+  --accent-soft: rgba(227, 194, 74, 0.1);
+  --accent-line: rgba(227, 194, 74, 0.4);
+
+  /* Semântico */
+  --success: #7fbf6a;
+  --success-soft: rgba(127, 191, 106, 0.1);
+  --success-line: rgba(127, 191, 106, 0.32);
+  --danger: #e2766b;
+  --danger-soft: rgba(226, 118, 107, 0.1);
+  --danger-line: rgba(226, 118, 107, 0.32);
+
+  /* Tipografia */
+  --font-sans: 'Geist Variable', 'Geist', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, 'Cascadia Code', monospace;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.375rem;
+  --text-2xl: 1.75rem;
+  --text-3xl: 2.25rem;
+  --text-4xl: 3rem;
+
+  /* Espaçamento */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 112px;
+
+  /* Forma */
+  --radius-sm: 3px;
+  --radius: 4px;
+  --radius-lg: 6px;
+
+  /* Movimento */
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --fast: 120ms;
+  --base: 180ms;
+
+  /* Layout */
+  --container: 1080px;
+  --nav-height: 60px;
+
+  color-scheme: dark;
+}
+
+/* ------------------------------ Reset ---------------------------------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
   margin: 0;
   padding: 0;
   width: 100%;
-  overflow-x: hidden; /* Evita que o site "dance" para os lados */
-  background-color: #0f172a; /* Use a cor exata do seu fundo */
+  overflow-x: hidden;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 #app {
   width: 100%;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  align-items: center; /* Centraliza o container na tela */
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  color: var(--text);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+}
+
+img {
+  max-width: 100%;
+}
+
+code,
+pre,
+kbd {
+  font-family: var(--font-mono);
+  font-feature-settings: 'liga' 0;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* Scrollbar discreta */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border: 3px solid transparent;
+  background-clip: content-box;
+  border-radius: 0;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #4a4a4e;
+  background-clip: content-box;
+}
+
+/* --------------------------- Utilitários ------------------------------- */
+
+.container {
+  width: 100%;
+  max-width: var(--container);
+  margin: 0 auto;
+  padding-inline: clamp(1rem, 4vw, 2rem);
+}
+
+/* Rótulo discreto em mono, usado só onde ajuda a situar */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-faint);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ------------------------- Transição de páginas ------------------------ */
+
+.page-enter-active,
+.page-leave-active {
+  transition: opacity var(--base) var(--ease), transform var(--base) var(--ease);
+}
+
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(4px);
+}
+
+.page-leave-to {
+  opacity: 0;
+}
+
+/* ------------------------- Tema do código (hljs) ----------------------- */
+
+.hljs {
+  color: #e4e0d8;
+  background: transparent;
+}
+
+.hljs-comment,
+.hljs-quote {
+  color: #6f6c66;
+  font-style: italic;
+}
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-literal,
+.hljs-built_in,
+.hljs-type {
+  color: #e3c24a;
+}
+
+.hljs-string,
+.hljs-attr,
+.hljs-template-variable,
+.hljs-addition,
+.hljs-regexp {
+  color: #a9cf8f;
+}
+
+.hljs-title,
+.hljs-title.class_,
+.hljs-title.function_,
+.hljs-section {
+  color: #ece9e4;
+}
+
+.hljs-number,
+.hljs-symbol,
+.hljs-bullet {
+  color: #e69a5b;
+}
+
+.hljs-variable,
+.hljs-params,
+.hljs-property {
+  color: #e4e0d8;
+}
+
+.hljs-meta,
+.hljs-meta .hljs-keyword {
+  color: #8a877f;
+}
+
+.hljs-tag,
+.hljs-name {
+  color: #e3c24a;
+}
+
+.hljs-attribute {
+  color: #e3c24a;
+}
+
+.hljs-deletion {
+  color: var(--danger);
+}
+
+/* ------------------------- Movimento reduzido -------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }

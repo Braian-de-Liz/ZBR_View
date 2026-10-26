@@ -1,297 +1,476 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-const copied = ref(false);
+import { computed, onBeforeUnmount, ref } from 'vue'
+import { Check, Copy } from 'lucide-vue-next'
+import { zbr } from 'br_standards_with_zod'
+import CodeBlock from '../components/CodeBlock.vue'
 
-const copyToClipboard = async () => {
-    const text = 'npm install br_standards_with_zod'
-    try {
-        await navigator.clipboard.writeText(text)
-        copied.value = true
+const INSTALL_COMMAND = 'npm install br_standards_with_zod'
 
-        setTimeout(() => {
-            copied.value = false
-        }, 2000)
-    } catch (err) {
-        console.error('Falha ao copiar:', err)
-    }
+const copied = ref(false)
+let resetTimer: number | undefined
+
+const copyInstall = async () => {
+  try {
+    await navigator.clipboard.writeText(INSTALL_COMMAND)
+    copied.value = true
+    window.clearTimeout(resetTimer)
+    resetTimer = window.setTimeout(() => (copied.value = false), 1800)
+  } catch {
+    /* área de transferência indisponível */
+  }
 }
+
+const regexCode = String.raw`// regex "de internet"
+const CPF = /^\d{3}\.?\d{3}\.?\d{3}-?\d{2}$/
+
+CPF.test('111.111.111-11') // true
+CPF.test('123.456.789-00') // true
+// nenhum dos dois CPFs é válido`
+
+const zbrCode = `import { zbr } from 'br_standards_with_zod'
+
+const cpf = zbr.cpf()
+
+cpf.safeParse('111.111.111-11').success // false
+cpf.safeParse('123.456.789-00').success // false
+cpf.parse('123.456.789-09') // "12345678909"`
+
+const validators = [
+  {
+    call: 'zbr.cpf()',
+    input: '123.456.789-09',
+    checks: 'dígitos verificadores; rejeita sequências repetidas',
+    schema: zbr.cpf()
+  },
+  {
+    call: 'zbr.cnpj()',
+    input: '11.222.333/0001-81',
+    checks: 'dígitos verificadores do CNPJ',
+    schema: zbr.cnpj()
+  },
+  {
+    call: 'zbr.rg()',
+    input: '12.345.678-9',
+    checks: 'formato e tamanho; remove a pontuação',
+    schema: zbr.rg()
+  },
+  {
+    call: 'zbr.cep()',
+    input: '88010-000',
+    checks: 'oito dígitos, com ou sem hífen',
+    schema: zbr.cep()
+  },
+  {
+    call: 'zbr.tel()',
+    input: '(47) 99999-8888',
+    checks: 'DDD real; fixo ou celular',
+    schema: zbr.tel()
+  }
+]
+
+// As saídas da tabela vêm da própria biblioteca, não são texto fixo.
+const rows = validators.map((item) => {
+  const result = item.schema.safeParse(item.input)
+  return { call: item.call, input: item.input, checks: item.checks, output: result.success ? String(result.data) : '—' }
+})
+
+const tabs = [
+  {
+    id: 'validacao',
+    label: 'Validação',
+    filename: 'validacao.ts',
+    code: `import { zbr } from 'br_standards_with_zod'
+
+// Valida e sanitiza: "123.456.789-09" -> "12345678909"
+const cpf = zbr.cpf().parse('123.456.789-09')
+
+// Telefones validados com DDDs brasileiros reais
+const tel = zbr.tel().parse('(47) 99999-8888')
+
+// CEP: aceita com ou sem máscara
+const cep = zbr.cep().parse('88010-000')`
+  },
+  {
+    id: 'mensagens',
+    label: 'Mensagens',
+    filename: 'mensagens.ts',
+    code: `import { zbr } from 'br_standards_with_zod'
+
+// A mensagem é o primeiro argumento do validador
+const cep = zbr.cep('CEP não encontrado em nossa base')
+
+const result = cep.safeParse('00000-000')
+
+if (!result.success) {
+  console.log(result.error.issues[0].message)
+  // "CEP não encontrado em nossa base"
+}`
+  },
+  {
+    id: 'schema',
+    label: 'Schema Zod',
+    filename: 'user-schema.ts',
+    code: `import { z } from 'zod'
+import { zbr } from 'br_standards_with_zod'
+
+export const userSchema = z.object({
+  name: z.string().min(3),
+  documento: zbr.cpf('CPF inválido'),
+  contato: zbr.tel('Telefone inválido'),
+  endereco_cep: zbr.cep()
+})
+
+export type User = z.infer<typeof userSchema>`
+  }
+] as const
+
+type TabId = (typeof tabs)[number]['id']
+const activeTab = ref<TabId>('validacao')
+
+const activeExample = computed(() => tabs.find((tab) => tab.id === activeTab.value) ?? tabs[0])
+
+onBeforeUnmount(() => window.clearTimeout(resetTimer))
 </script>
 
 <template>
-    <div class="container">
-        <header class="hero">
-            <div class="logo-wrapper">
-                <img src="../assets/imgs/logo zbr (1).png" alt="ZBR Logo" class="main-logo" />
-            </div>
-            <h1>ZBR Standards</h1>
-            <p class="subtitle">A ponte perfeita entre o <strong>Zod</strong> e os padrões brasileiros.</p>
+  <div class="page">
+    <section class="hero container">
+      <p class="eyebrow">br_standards_with_zod · Zod 3 e 4</p>
 
-            <div class="npm-install" @click="copyToClipboard" title="Clique para copiar"
-                style="cursor: pointer; position: relative;">
-                <code>npm install br_standards_with_zod</code>
+      <h1>Validação de documentos brasileiros para o Zod.</h1>
 
-                <span class="copy-status">
-                    {{ copied ? ' Copiado!' : '📋' }}
-                </span>
-            </div>
-        </header>
+      <p class="lead">
+        CPF, CNPJ, RG, CEP e telefone com os algoritmos oficiais. O valor sai sanitizado, sem
+        máscara, pronto para o banco.
+      </p>
 
-        <section class="explicacao">
-            <div class="grid">
-                <div class="card">
-                    <h3>O que é?</h3>
-                    <p>
-                        É uma biblioteca de esquemas <strong>Zod</strong> pré-configurados para validar documentos
-                        brasileiros. Esqueça regex complexas; nós cuidamos da matemática dos dígitos verificadores.
-                    </p>
-                </div>
+      <div class="install">
+        <code class="install-command"
+          ><span class="prompt" aria-hidden="true">$</span> {{ INSTALL_COMMAND }}</code
+        >
+        <button
+          type="button"
+          class="install-copy"
+          :class="{ copied }"
+          :aria-label="copied ? 'Comando copiado' : 'Copiar comando de instalação'"
+          @click="copyInstall"
+        >
+          <Check v-if="copied" :size="15" aria-hidden="true" />
+          <Copy v-else :size="15" aria-hidden="true" />
+        </button>
+      </div>
 
-                <div class="card">
-                    <h3>O que ela faz?</h3>
-                    <ul>
-                        <li>✅ <strong>CPF, CNPJ e RG</strong> (v1.1.0)</li>
-                        <li>✅ <strong>CEP</strong> e <strong>Telefone</strong> (DDDs Reais)</li>
-                        <li>✅ <strong>Sanitização</strong> automática (remove máscaras)</li>
-                        <li>✅ Mensagens de erro customizáveis</li>
-                    </ul>
-                </div>
-            </div>
-        </section>
+      <p class="hero-links">
+        <router-link to="/playground" class="link-strong">Testar no playground →</router-link>
+        <router-link to="/integracoes">Ver integrações</router-link>
+      </p>
+    </section>
 
-        <section class="code-showcase">
-            <div class="section-title">
-                <h2>Como funciona na prática?</h2>
-                <p>Simples, intuitivo e poderoso.</p>
-            </div>
+    <section class="section container" aria-labelledby="regex-title">
+      <h2 id="regex-title">Regex valida o formato. O CPF precisa de conta.</h2>
+      <p class="section-sub">
+        Uma regex aceita <code>111.111.111-11</code>. Os dois últimos dígitos de CPF e CNPJ são
+        calculados a partir dos anteriores, e é isso que o ZBR confere.
+      </p>
 
-            <div class="how-it-works">
-                <h3>1. Validação e Transformação</h3>
-                <p>Valide e limpe os dados automaticamente para o seu banco de dados.</p>
-                <pre>
-                    <code class="code_center">
-import { zbr } from 'br_standards_with_zod'
+      <div class="compare">
+        <div>
+          <p class="compare-label">Antes</p>
+          <CodeBlock :code="regexCode" filename="regex.ts" lang="ts" />
+        </div>
+        <div>
+          <p class="compare-label compare-label--accent">Com ZBR</p>
+          <CodeBlock :code="zbrCode" filename="zbr.ts" lang="ts" />
+        </div>
+      </div>
+    </section>
 
-// Valida e transforma: "123.456.789-01" -> "12345678901"
-zbr.cpf().parse('123.456.789-01') 
+    <section class="section container" aria-labelledby="validators-title">
+      <h2 id="validators-title">Cinco validadores</h2>
+      <p class="section-sub">
+        Cada um é um schema Zod comum. As saídas abaixo são geradas pela própria biblioteca.
+      </p>
 
-// Valida telefones com DDDs brasileiros reais
-zbr.tel().parse('(47) 99888-7766')
-                    </code>
-                </pre>
-            </div>
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">Validador</th>
+              <th scope="col">Entrada</th>
+              <th scope="col">Saída</th>
+              <th scope="col">O que confere</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="row in rows" :key="row.call">
+              <th scope="row">{{ row.call }}</th>
+              <td>{{ row.input }}</td>
+              <td class="out">{{ row.output }}</td>
+              <td class="checks">{{ row.checks }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
 
-            <div class="how-it-works">
-                <h3>2. Mensagens Customizadas</h3>
-                <p>Dê um feedback personalizado para o seu usuário.</p>
-                <pre>
-                    <code class="code_center">
-// Você pode passar a mensagem diretamente no método
-const schema = zbr.cep("CEP não encontrado em nossa base")
+    <section class="section container" aria-labelledby="usage-title">
+      <h2 id="usage-title">Uso</h2>
 
-const result = schema.safeParse('00000-000')
-if (!result.success) {
-  console.log(result.error.errors[0].message)
-}
-                    </code>
-                </pre>
-            </div>
+      <div class="tabs" role="tablist" aria-label="Exemplos de uso">
+        <button
+          v-for="tab in tabs"
+          :key="tab.id"
+          type="button"
+          role="tab"
+          class="tab"
+          :class="{ active: activeTab === tab.id }"
+          :aria-selected="activeTab === tab.id"
+          @click="activeTab = tab.id"
+        >
+          {{ tab.label }}
+        </button>
+      </div>
 
-            <div class="how-it-works">
-                <h3>3. Integração em Schemas Complexos</h3>
-                <p>Use dentro de objetos do Zod perfeitamente.</p>
-                <pre>
-                    <code class="code_center">
-import { z } from 'zod'
-
-const userSchema = z.object({
-  name: z.string().min(3),
-  documento: zbr.cpf(),
-  contato: zbr.tel(),
-  endereco_cep: zbr.cep()
-})
-                    </code>
-                </pre>
-            </div>
-        </section>
-
-        <footer class="footer-simple">
-            <p>ZBR Standards &copy; 2026 - Desenvolvido por Braian de Liz para a comunidade.</p>
-        </footer>
-    </div>
+      <CodeBlock :code="activeExample.code" :filename="activeExample.filename" lang="ts" />
+    </section>
+  </div>
 </template>
 
 <style scoped>
-/* Mantive todos os seus estilos intactos, pois a estética está perfeita. */
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
-}
-
-@keyframes pulse-glow {
-    0%, 100% { filter: drop-shadow(0 0 15px rgba(56, 189, 248, 0.3)); }
-    50% { filter: drop-shadow(0 0 30px rgba(56, 189, 248, 0.6)); }
-}
-
-.container {
-    width: 100%;
-    max-width: min(1200px, 92vw);
-    margin: 0 auto;
-    padding: clamp(4rem, 6vw, 6rem) clamp(1rem, 4vw, 2rem) 2rem;
-    color: #f8fafc;
-    box-sizing: border-box;
-    animation: fadeInUp 0.8s ease-out;
+.page {
+  width: 100%;
+  padding-top: var(--nav-height);
 }
 
 .hero {
-    text-align: center;
-    padding: 0 clamp(0.5rem, 3vw, 1rem) clamp(2rem, 6vw, 3rem);
+  padding-block: clamp(3.5rem, 10vw, 7rem) clamp(2.5rem, 6vw, 4rem);
 }
-
-.main-logo {
-    height: clamp(64px, 18vw, 96px);
-    max-width: 100%;
-    margin-bottom: 1.5rem;
-    animation: float 4s ease-in-out infinite, pulse-glow 3s infinite;
-    transition: transform 0.3s ease;
-}
-
-.main-logo:hover { transform: scale(1.05); }
 
 .hero h1 {
-    font-size: clamp(2rem, 10vw, 3.5rem);
-    margin-bottom: 1rem;
-    background: linear-gradient(to right, #22c55e, #3b82f6);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    font-weight: 800;
-    line-height: 1.1;
+  max-width: 14ch;
+  margin-top: var(--space-5);
+  font-size: clamp(2.5rem, 8vw, 4.75rem);
+  font-weight: 500;
+  letter-spacing: -0.045em;
+  line-height: 1.02;
 }
 
-.subtitle {
-    font-size: clamp(1rem, 3vw, 1.1rem);
-    line-height: 1.5;
-    color: #94a3b8;
+.lead {
+  max-width: 52ch;
+  margin-top: var(--space-6);
+  color: var(--text-muted);
+  font-size: var(--text-lg);
+  line-height: 1.6;
 }
 
-.npm-install {
-    background: #1e293b;
-    padding: 0.9rem 1.2rem;
-    border-radius: 12px;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin: 2rem auto 0;
-    border: 1px solid #334155;
-    font-family: monospace;
-    color: #38bdf8;
-    font-size: clamp(0.75rem, 2.5vw, 0.85rem);
-    max-width: 100%;
-    word-break: break-word;
-    text-align: center;
-    transition: all 0.2s ease;
+.install {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: fit-content;
+  max-width: 100%;
+  margin-top: var(--space-8);
+  padding: 8px 8px 8px var(--space-4);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--bg-soft);
 }
 
-.npm-install:hover {
-    border-color: #38bdf8;
-    background: #243046;
-    transform: translateY(-2px);
+.install-command {
+  font-size: var(--text-sm);
+  white-space: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
 
-.npm-install:active { transform: translateY(0); }
-
-.npm-install code {
-    white-space: normal;
-    overflow-wrap: anywhere;
+.install-command::-webkit-scrollbar {
+  display: none;
 }
 
-.grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
-    gap: clamp(1rem, 3vw, 1.5rem);
-    margin-top: 2rem;
+.prompt {
+  margin-right: 6px;
+  color: var(--accent);
+  user-select: none;
 }
 
-.card {
-    background: #1e293b;
-    padding: clamp(1.2rem, 4vw, 1.5rem);
-    border-radius: 16px;
-    border: 1px solid #334155;
-    display: flex;
-    flex-direction: column;
-    transition: all 0.3s ease;
+.install-copy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-faint);
+  cursor: pointer;
+  transition: color var(--fast) var(--ease);
 }
 
-.card:hover {
-    border-color: #334155;
-    background: #243046;
-    transform: translateY(-5px);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+.install-copy:hover {
+  color: var(--text);
 }
 
-.card h3 {
-    color: #38bdf8;
-    margin-bottom: 1rem;
-    font-size: 1.3rem;
+.install-copy.copied {
+  color: var(--success);
 }
 
-.card li {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-    margin-bottom: 0.75rem;
-    color: #cbd5e1;
-    font-size: 0.95rem;
+.hero-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-6);
+  margin-top: var(--space-6);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
 }
 
-.code-showcase { margin-top: 3rem; }
-.section-title { text-align: center; margin-bottom: 2rem; }
-.section-title h2 { font-size: clamp(1.6rem, 5vw, 2.2rem); }
-.section-title p { color: #94a3b8; }
-
-.how-it-works {
-    margin: 2rem 0;
-    background: #111827;
-    padding: clamp(1.2rem, 4vw, 1.5rem);
-    border-radius: 16px;
-    border: 1px solid #1e293b;
-    transition: border-color 0.3s ease;
+.hero-links a {
+  text-decoration: underline;
+  text-decoration-color: var(--border-strong);
+  text-underline-offset: 4px;
+  transition: color var(--fast) var(--ease), text-decoration-color var(--fast) var(--ease);
 }
 
-.how-it-works:hover { border-color: #334155; }
-
-pre {
-    background: #010409;
-    padding: clamp(0.75rem, 3vw, 1rem);
-    border-radius: 8px;
-    overflow-x: auto;
-    border: 1px solid #30363d;
-    transition: border-color 0.3s ease;
+.hero-links a:hover {
+  color: var(--text);
+  text-decoration-color: var(--accent);
 }
 
-.how-it-works:hover pre { border-color: #38bdf8; }
-.code_center { font-size: clamp(0.75rem, 2.5vw, 0.85rem); line-height: 1.6; }
-
-.footer-simple {
-    text-align: center;
-    margin-top: 4rem;
-    color: #64748b;
-    font-size: 0.9rem;
+.hero-links .link-strong {
+  color: var(--accent);
+  text-decoration-color: var(--accent-line);
 }
 
-@media (max-width: 600px) {
-    .container { padding-top: 4.5rem; }
-    .hero h1 { font-size: clamp(1.9rem, 9vw, 2.3rem); }
-    .card:hover { transform: translateY(-2px); }
+.section {
+  padding-block: var(--space-16);
+  border-top: 1px solid var(--border);
+}
+
+.section h2 {
+  max-width: 24ch;
+  font-size: clamp(1.5rem, 4vw, 2.25rem);
+  font-weight: 500;
+}
+
+.section-sub {
+  max-width: 60ch;
+  margin-top: var(--space-4);
+  color: var(--text-muted);
+}
+
+.section-sub code {
+  color: var(--text);
+  font-size: 0.9em;
+}
+
+.compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-6);
+  margin-top: var(--space-10);
+  align-items: start;
+}
+
+.compare > div {
+  min-width: 0;
+}
+
+.compare-label {
+  margin-bottom: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-faint);
+}
+
+.compare-label--accent {
+  color: var(--accent);
+}
+
+.table-wrap {
+  margin-top: var(--space-8);
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.table th,
+.table td {
+  padding: var(--space-4) var(--space-4) var(--space-4) 0;
+  border-bottom: 1px solid var(--border);
+  font-size: var(--text-sm);
+  vertical-align: baseline;
+}
+
+.table thead th {
+  padding-top: 0;
+  font-weight: 400;
+  color: var(--text-faint);
+}
+
+.table tbody th,
+.table td:nth-child(2),
+.table .out {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+}
+
+.table tbody th {
+  font-weight: 500;
+  color: var(--accent);
+}
+
+.table .out {
+  color: var(--text);
+}
+
+.table td:nth-child(2),
+.table .checks {
+  color: var(--text-muted);
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-6);
+  margin-block: var(--space-6) var(--space-4);
+  border-bottom: 1px solid var(--border);
+}
+
+.tab {
+  margin-bottom: -1px;
+  padding: 0 0 var(--space-3);
+  border: 0;
+  border-bottom: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: color var(--fast) var(--ease);
+}
+
+.tab:hover {
+  color: var(--text);
+}
+
+.tab.active {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}
+
+@media (max-width: 820px) {
+  .compare {
+    grid-template-columns: 1fr;
+  }
+
+  .section {
+    padding-block: var(--space-12);
+  }
 }
 </style>

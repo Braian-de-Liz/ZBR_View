@@ -1,238 +1,295 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import { Menu, X } from 'lucide-vue-next'
 
-const isMenuOpen = ref(false);
+const route = useRoute()
+const isMenuOpen = ref(false)
 
 const toggleMenu = () => {
-    isMenuOpen.value = !isMenuOpen.value;
-};
+  isMenuOpen.value = !isMenuOpen.value
+}
 
 const closeMenu = () => {
-    isMenuOpen.value = false;
-};
+  isMenuOpen.value = false
+}
+
+watch(() => route.fullPath, closeMenu)
+
+watch(isMenuOpen, (open) => {
+  document.body.style.overflow = open ? 'hidden' : ''
+})
+
+const onKeydown = (event: KeyboardEvent) => {
+  if (event.key === 'Escape') closeMenu()
+}
+
+onMounted(() => window.addEventListener('keydown', onKeydown))
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onKeydown)
+  document.body.style.overflow = ''
+})
+
+const year = computed(() => new Date().getFullYear())
 </script>
 
 <template>
-    <nav class="navbar">
-        <div class="nav-content">
-            <div class="brand-group">
-                <router-link to="/" class="brand" @click="closeMenu">
-                    <img src="../assets/imgs/logo zbr (1).png" alt="ZBR Logo" class="nav-logo" />
-                    <span class="brand-name">ZBR <span class="thin">Standards</span></span>
-                </router-link>
-            </div>
+  <header class="navbar">
+    <div class="nav-inner container">
+      <router-link to="/" class="brand" @click="closeMenu" aria-label="ZBR Standards — início">
+        <img src="../assets/imgs/logo-zbr.png" alt="" class="nav-logo" width="32" height="24" />
+        <span class="brand-name">zbr<span class="brand-thin">/standards</span></span>
+      </router-link>
 
-            <div class="nav-links desktop-only">
-                <div class="social-links">
-                    <a href="https://github.com/Braian-de-Liz/br_standards_with_ZOD" target="_blank" class="social-icon">
-                        <i class="fab fa-github"></i> <span class="social-text">GitHub</span>
-                    </a>
-                    <a href="https://www.npmjs.com/package/br_standards_with_zod" target="_blank" class="social-icon">
-                        <span class="social-text">NPM</span>
-                    </a>
-                </div>
-                
-                <router-link to="/" class="nav-item btn-playground">Início</router-link>
-                
-                <router-link to="/integracoes" class="nav-item btn-playground">Integrações</router-link>
+      <nav class="nav-links" aria-label="Navegação principal">
+        <router-link to="/" class="nav-link">Início</router-link>
+        <router-link to="/playground" class="nav-link">Playground</router-link>
+        <router-link to="/integracoes" class="nav-link">Integrações</router-link>
 
-                <router-link to="/playground" class="nav-item btn-playground">
-                    <img src="../assets/imgs/playground.png" alt="" class="icon-sm" />
-                    <span>Playground</span>
-                </router-link>
-            </div>
+        <span class="nav-divider" aria-hidden="true"></span>
 
-            <button class="hamburger" @click="toggleMenu" :class="{ 'is-active': isMenuOpen }" aria-label="Menu">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
+        <a
+          class="nav-link"
+          href="https://github.com/Braian-de-Liz/br_standards_with_ZOD"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          GitHub
+        </a>
+        <a
+          class="nav-link"
+          href="https://www.npmjs.com/package/br_standards_with_zod"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          npm
+        </a>
+      </nav>
+
+      <button
+        class="hamburger"
+        type="button"
+        :aria-expanded="isMenuOpen"
+        aria-controls="mobile-menu"
+        :aria-label="isMenuOpen ? 'Fechar menu' : 'Abrir menu'"
+        @click="toggleMenu"
+      >
+        <X v-if="isMenuOpen" :size="22" aria-hidden="true" />
+        <Menu v-else :size="22" aria-hidden="true" />
+      </button>
+    </div>
+
+    <Teleport to="body">
+      <transition name="menu">
+        <div v-if="isMenuOpen" id="mobile-menu" class="mobile-menu">
+        <nav class="mobile-nav" aria-label="Navegação principal">
+          <router-link to="/" class="mobile-link" @click="closeMenu">Início</router-link>
+          <router-link to="/integracoes" class="mobile-link" @click="closeMenu">Integrações</router-link>
+          <router-link to="/playground" class="mobile-link" @click="closeMenu">Playground</router-link>
+        </nav>
+
+        <div class="mobile-footer">
+          <a
+            href="https://github.com/Braian-de-Liz/br_standards_with_ZOD"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="mobile-social"
+          >
+            GitHub
+          </a>
+          <a
+            href="https://www.npmjs.com/package/br_standards_with_zod"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="mobile-social"
+          >
+            npm
+          </a>
         </div>
 
-        <transition name="fade-slide">
-            <div v-if="isMenuOpen" class="mobile-menu">
-                <router-link to="/" class="mobile-item" @click="closeMenu">Início</router-link>
-                <router-link to="/integracoes" class="mobile-item" @click="closeMenu">Integrações</router-link>
-                <router-link to="/playground" class="mobile-item" @click="closeMenu">Playground</router-link>
-                
-                <div class="mobile-footer">
-                    <a href="https://github.com/Braian-de-Liz/br_standards_with_ZOD" target="_blank" class="social-icon">GitHub</a>
-                    <a href="https://www.npmjs.com/package/br_standards_with_zod" target="_blank" class="social-icon">NPM</a>
-                </div>
-            </div>
-        </transition>
-    </nav>
+        <p class="mobile-copy">ZBR Standards © {{ year }} · MIT</p>
+        </div>
+      </transition>
+    </Teleport>
+  </header>
 </template>
 
 <style scoped>
-/* NAVBAR BASE */
 .navbar {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%;
-    height: 64px;
-    background: rgba(15, 23, 42, 0.9);
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid #1e293b;
-    z-index: 1000;
-    display: flex;
-    justify-content: center;
+  position: fixed;
+  inset: 0 0 auto;
+  width: 100%;
+  height: var(--nav-height);
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  z-index: 1000;
 }
 
-.nav-content {
-    width: 100%;
-    max-width: 1200px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 1.5rem;
-}
-
-/* BRAND / LOGO */
-.brand-group {
-    display: flex;
-    align-items: center;
+.nav-inner {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-6);
 }
 
 .brand {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    text-decoration: none;
-    color: white;
-    font-weight: 700;
-    font-size: 1.2rem;
-    flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
-.nav-logo { height: 30px; }
-.thin { font-weight: 300; color: #94a3b8; }
+.nav-logo {
+  width: auto;
+  height: 22px;
+  object-fit: contain;
+  display: block;
+}
 
-/* MENU DESKTOP */
+.brand-name {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.brand-thin {
+  font-weight: 400;
+  color: var(--text-faint);
+}
+
 .nav-links {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
 }
 
-.social-links {
-    display: flex;
-    gap: 1rem;
-    padding-right: 1rem;
-    border-right: 1px solid #334155;
+.nav-link {
+  position: relative;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  padding: 4px 0;
+  transition: color var(--fast) var(--ease);
 }
 
-.social-icon {
-    color: #94a3b8;
-    text-decoration: none;
-    font-size: 0.85rem;
-    transition: color 0.2s;
+.nav-link:hover,
+.nav-link.router-link-exact-active {
+  color: var(--text);
 }
 
-.social-icon:hover { color: #38bdf8; }
-
-.nav-item {
-    text-decoration: none;
-    color: #94a3b8;
-    font-size: 0.95rem;
-    transition: all 0.2s;
+.nav-link.router-link-exact-active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: var(--accent);
 }
 
-.nav-item:hover { color: white; }
-
-/* Classe ativa do Router */
-.router-link-active:not(.brand) {
-    color: #38bdf8;
+.nav-divider {
+  width: 1px;
+  height: 16px;
+  background: var(--border-strong);
 }
 
-/* BOTÃO PLAYGROUND */
-.btn-playground {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: #1e293b;
-    padding: 0.5rem 1rem;
-    border-radius: 8px;
-    border: 1px solid #334155;
-    color: white !important;
-}
-
-.btn-playground:hover {
-    background: #2d3a4f;
-    border-color: #38bdf8;
-}
-
-.icon-sm {
-    height: 18px !important;
-    width: 18px !important;
-    object-fit: contain;
-    flex-shrink: 0;
-}
-
-/* HAMBURGER */
 .hamburger {
-    display: none;
-    flex-direction: column;
-    gap: 5px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    z-index: 1100;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
 }
 
-.hamburger span {
-    display: block;
-    width: 25px;
-    height: 2px;
-    background: white;
-    transition: 0.3s;
+.hamburger:hover {
+  border-color: var(--border-strong);
 }
 
-.hamburger.is-active span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
-.hamburger.is-active span:nth-child(2) { opacity: 0; }
-.hamburger.is-active span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
-
-/* MENU MOBILE */
 .mobile-menu {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%;
-    height: 100vh;
-    background: #0f172a;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 2rem;
-    z-index: 1050;
+  position: fixed;
+  inset: var(--nav-height) 0 0;
+  height: calc(100dvh - var(--nav-height));
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-6) clamp(1rem, 4vw, 2rem) var(--space-8);
+  z-index: 990;
+  overflow-y: auto;
 }
 
-.mobile-item {
-    font-size: 1.8rem;
-    color: white;
-    text-decoration: none;
-    font-weight: 700;
+.mobile-nav {
+  display: flex;
+  flex-direction: column;
 }
 
-.mobile-item.router-link-active {
-    color: #38bdf8;
+.mobile-link {
+  padding: var(--space-4) 0;
+  font-size: var(--text-xl);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+}
+
+.mobile-link.router-link-exact-active {
+  color: var(--accent);
 }
 
 .mobile-footer {
-    display: flex;
-    gap: 2rem;
-    margin-top: 2rem;
+  margin-top: auto;
+  padding-top: var(--space-8);
+  display: flex;
+  gap: var(--space-6);
 }
 
-.fade-slide-enter-active, .fade-slide-leave-active { transition: all 0.3s ease; }
-.fade-slide-enter-from, .fade-slide-leave-to { opacity: 0; transform: translateY(-20px); }
-
-@media (max-width: 850px) {
-    .desktop-only { display: none; }
-    .hamburger { display: flex; }
+.mobile-social {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
 }
 
-@media (max-width: 480px) {
-    .brand-name .thin { display: none; }
+.mobile-social:hover {
+  color: var(--text);
+}
+
+.mobile-copy {
+  margin-top: var(--space-6);
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.menu-enter-active,
+.menu-leave-active {
+  transition: opacity var(--base) var(--ease);
+}
+
+.menu-enter-from,
+.menu-leave-to {
+  opacity: 0;
+}
+
+@media (max-width: 900px) {
+  .nav-links {
+    display: none;
+  }
+
+  .hamburger {
+    display: inline-flex;
+  }
+}
+
+@media (min-width: 901px) {
+  .mobile-menu {
+    display: none;
+  }
 }
 </style>

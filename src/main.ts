@@ -1,9 +1,11 @@
 import { createApp } from 'vue'
+import '@fontsource-variable/geist'
+import '@fontsource-variable/jetbrains-mono'
 import './style.css'
 import App from './App.vue'
-import router from './index' // Removemos o comentário (as barras //)
+import router from './router'
 
 const app = createApp(App)
 
-app.use(router) // Ligamos o roteador aqui
-app.mount('#app') // Ligamos o site apenas UMA vez
+app.use(router)
+app.mount('#app')
